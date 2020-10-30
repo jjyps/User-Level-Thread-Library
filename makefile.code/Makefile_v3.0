@@ -1,0 +1,33 @@
+targets := myfact README.html
+objs    := main.o fact.o
+
+CC      := gcc
+CFLAGS  := -Wall -Wextra -Werror -MMD
+CFLAGS  += -g
+PANDOC  := pandoc
+
+ifneq ($(V),1)
+Q = @
+endif
+
+all: $(targets)
+
+# Dep tracking *must* be below the 'all' rule
+deps := $(patsubst %.o,%.d,$(objs))
+-include $(deps)
+
+myfact: $(objs)
+	@echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -o $@ $^
+
+%.o: %.c
+	@echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+
+%.html: %.md
+	@echo "MD $@"
+	$(Q)$(PANDOC) -o $@ $<
+
+clean:
+	@echo "clean"
+	$(Q)rm -f $(targets) $(objs) $(deps)
