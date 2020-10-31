@@ -8,7 +8,7 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <ucontext.h>
+#include <sys/ucontext.h>
 
 /*
  * 3 context objects (for the "main" thread and the two extra function threads)
