@@ -1,6 +1,6 @@
 # Target library
 lib 	:= libuthread.a
-objs 	:= 
+objs 	:= queue.o
 
 CC		:= gcc
 CFLAGS	:= -Wall -Wextra -Werror -MMD
@@ -15,6 +15,14 @@ all: $(lib)
 deps := $(patsubst %.o,%.d,$(objs))
 -include $(deps)
 
+$(lib): $(objs)
+	@echo "create library"
+	$(Q)ar rcs $(lib) $(objs)
+
+%.o: %.c 
+	@echo "CC	$@"
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<	
 
 clean: 
 		@echo "CLEAN"
+		$(Q)rm -f $(lib) $(objs) $(deps)
