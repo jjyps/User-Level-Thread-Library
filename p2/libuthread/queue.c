@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "queue.h"
+#include "queue_helpers.h"
 
 typedef struct node node_t;
 
@@ -163,4 +164,11 @@ int queue_length(queue_t queue)
 	else
 		return (queue->length);
 }
+void* get_head(queue_t queue) {
+	return queue->head;
+}
+void* get_next(queue_t queue) {
+	return queue->head->next;
+}
+
 
