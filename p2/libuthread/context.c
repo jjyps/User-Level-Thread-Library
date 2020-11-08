@@ -9,6 +9,8 @@
 
 void uthread_ctx_switch(uthread_ctx_t *prev, uthread_ctx_t *next)
 {
+	printf("%p\n", prev);
+	printf("%p\n", next);
 	/*
 	 * swapcontext() saves the current context in structure pointer by @prev
 	 * and actives the context pointed by @next
