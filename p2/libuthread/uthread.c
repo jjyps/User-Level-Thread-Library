@@ -1,4 +1,4 @@
-#include<assert.h>
+#include <assert.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -11,9 +11,13 @@
 #include "uthread.h"
 #include "context.c"
 typedef struct uthread_tcb tcb;
-enum State { running = 0,ready = 1,blocked = 2,zombie = 3,terminated = 4};
+enum State {running = 0,ready = 1,blocked = 2,zombie = 3,terminated = 4};
 queue_t threads;
+//queue_t running_q;
+//queue_t ready_q;
+//queue_t q;
 tcb *curr_thread;
+
 struct uthread_tcb
 {
 	/* TODO Phase 2 */
@@ -26,23 +30,28 @@ struct uthread_tcb *uthread_current(void)
 {
 	/* TODO Phase 2 */
 	return curr_thread;
-
 }
 
 void uthread_yield(void)
 {
 	/* TODO Phase 2 */
-	tcb* prev_thread = curr_thread;
-	tcb* ptr;
-	queue_dequeue(threads,(void**)&ptr);
-	queue_enqueue(threads,prev_thread);
-	curr_thread = (struct uthread_tcb*)get_head(threads);
-	uthread_ctx_t* prev_ctx = ptr->thread_context;
-	uthread_ctx_t* next_ctx = curr_thread->thread_context;
-
-
-	uthread_ctx_switch(prev_ctx, next_ctx);
 	
+	tcb* prev_thread = NULL;
+	tcb* next_thread = NULL;
+
+	queue_dequeue(threads,(void**)&next_thread);
+	next_thread->curr_state = 0;
+
+	prev_thread = uthread_current();
+	prev_thread->curr_state = 1;
+	queue_enqueue(threads,prev_thread);
+	curr_thread = next_thread;
+
+	//curr_thread = (struct uthread_tcb*)get_head(threads);
+	//uthread_ctx_t* prev_ctx = next_thread->thread_context;
+	//uthread_ctx_t* next_ctx = curr_thread->thread_context;
+	
+	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
 }
 
 void uthread_exit(void)
@@ -85,7 +94,6 @@ int uthread_start(uthread_func_t func, void *arg)
 	
 
 	while(1) {
-
 
 		if(curr_thread->curr_state == 3) {
 			uthread_ctx_destroy_stack(curr_thread->top_of_stack);
