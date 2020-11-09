@@ -10,37 +10,39 @@
 #include "private.h"
 #include "uthread.h"
 #include "context.c"
-enum State { running = 0,ready = 1,blocked = 2,zombie = 3,terminated = 4, idle = 5 };
-static queue_t run_threads;
-static struct uthread_tcb* curr_thread;
-//static struct uthread_tcb* idle_thread;
+typedef struct uthread_tcb tcb;
+enum State { running = 0,ready = 1,blocked = 2,zombie = 3,terminated = 4};
+queue_t threads;
+tcb *curr_thread;
 struct uthread_tcb
 {
 	/* TODO Phase 2 */
-	ucontext_t thread_context;
-	void *top_of_stack;
 	int curr_state;
-	uthread_func_t func;
-	void *arg;
+	uthread_ctx_t* thread_context;
+	void* top_of_stack;
 };
 
 struct uthread_tcb *uthread_current(void)
 {
 	/* TODO Phase 2 */
 	return curr_thread;
+
 }
 
 void uthread_yield(void)
 {
 	/* TODO Phase 2 */
-	struct uthread_tcb* prev_thread = curr_thread; // uthread_current();
-	void *temp_thread;
-	queue_dequeue(run_threads, (void **)&temp_thread);
-	queue_enqueue(run_threads, &prev_thread);
-	struct uthread_tcb* next_thread = (struct uthread_tcb *)get_head(run_threads);
-	printf("%d\n", next_thread->curr_state);
-	curr_thread = next_thread;
-	uthread_ctx_switch(&prev_thread->thread_context, &next_thread->thread_context);
+	tcb* prev_thread = curr_thread;
+	tcb* ptr;
+	queue_dequeue(threads,(void**)&ptr);
+	queue_enqueue(threads,prev_thread);
+	curr_thread = (struct uthread_tcb*)get_head(threads);
+	uthread_ctx_t* prev_ctx = ptr->thread_context;
+	uthread_ctx_t* next_ctx = curr_thread->thread_context;
+
+
+	uthread_ctx_switch(prev_ctx, next_ctx);
+	
 }
 
 void uthread_exit(void)
@@ -49,29 +51,27 @@ void uthread_exit(void)
 	curr_thread->curr_state = 3;
 }
 
-int uthread_create(uthread_func_t func, void *arg) //Done, I think?
+int uthread_create(uthread_func_t func, void *arg) 
 {
 	/* TODO Phase 2 */
-	void *thread_stack;
-	struct uthread_tcb thread_tcb;
+	tcb* new_thread = malloc(sizeof(tcb));
 
-	thread_stack = uthread_ctx_alloc_stack();
-
-	if (thread_stack == NULL)
+	new_thread->curr_state = 1;
+	void* new_stack = uthread_ctx_alloc_stack();
+	if(new_stack == NULL)
+		return -1;
+	
+	new_thread->thread_context = malloc(sizeof(uthread_ctx_t));
+	if(uthread_ctx_init(new_thread->thread_context, new_stack, func, arg) == -1)
 		return -1;
 
-	thread_tcb.curr_state = 0;
-	thread_tcb.func = func;
-	thread_tcb.arg = arg;
-	int s = uthread_ctx_init(&thread_tcb.thread_context, thread_stack, func, arg);
-	if (s == -1)
-		return -1;
 
-	if (run_threads == NULL)
-		return -1;
-
-	if (queue_enqueue(run_threads, &curr_thread) == -1)
-		return -1;
+	new_thread->curr_state = 0;
+	queue_enqueue(threads, &new_thread);
+	if(queue_length(threads) == 1) {
+		curr_thread = (struct uthread_tcb*)get_head(threads);
+	}
+	uthread_ctx_bootstrap(func, arg);
 	
 	return 0;
 }
@@ -79,43 +79,26 @@ int uthread_create(uthread_func_t func, void *arg) //Done, I think?
 int uthread_start(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
-	/* initialize first thread */
-	run_threads = queue_create();
-	uthread_create(func, arg);
-	curr_thread = (struct uthread_tcb *)get_head(run_threads);
-	curr_thread->curr_state = 5;
-	
+	threads = queue_create();
+	if(uthread_create(func, arg) == -1) 
+		return -1;
 	
 
-	/*Loop until there are no more threads */
-	while (1)
-	{
-		/* if thread is not ready to run then yield */
-		if ((curr_thread->curr_state != 1 && curr_thread->curr_state != 5) || (curr_thread->curr_state == 5 && queue_length(run_threads) > 1))
-		{
-			uthread_yield();
-		}
+	while(1) {
 
-		/* execute function */
-		curr_thread->curr_state = 0;
-		uthread_ctx_bootstrap(func, arg);
-		/*Thread was completed then deallocate stack, delete from queue & yield to next one */
-		if (curr_thread->curr_state == 3)
-		{
+
+		if(curr_thread->curr_state == 3) {
 			uthread_ctx_destroy_stack(curr_thread->top_of_stack);
+			tcb zombie_thread;
 			curr_thread->curr_state = 4;
-			struct uthread_tcb *prev_thread;
-			
-			queue_dequeue(run_threads, (void **)&prev_thread);
-			
-			
-			// uthread_yield();
+			queue_dequeue(threads, (void**)&zombie_thread);
 		}
-		if (queue_length(run_threads) == 0)
-				break;
-	}
-	queue_destroy(run_threads);
+		if(queue_length(threads) == 0) 
+			break;
 
+
+	}
+	queue_destroy(threads);
 	return 0;
 }
 
@@ -123,6 +106,7 @@ void uthread_block(void)
 {
 	/* TODO Phase 2/3 */
 	curr_thread->curr_state = 2;
+	uthread_yield();
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
