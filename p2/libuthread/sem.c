@@ -21,7 +21,6 @@ sem_t sem_create(size_t count)
 	// preempt_enable();
 	sem->count = count;
 	sem->blocked = queue_create();
-
 	return sem;
 }
 
@@ -41,6 +40,7 @@ int sem_down(sem_t sem)
 	/* TODO Phase 3 */
 	if(sem == NULL)
 		return -1;
+
 
 	/* No available resource cause the calling thread blocked */
 	if(sem->count == 0){
