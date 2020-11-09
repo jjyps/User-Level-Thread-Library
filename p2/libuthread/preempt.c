@@ -20,6 +20,11 @@ void timer_interrupt_handler(int signum){
 	uthread_yield();
 }
 
+/* Signal handler = timer interrupt handler, will force the currently running thread to yield */
+void timer_interrupt_handler(int signum){
+	uthread_yield();
+}
+
 void preempt_disable(void)
 {
 	/* TODO Phase 4 */
