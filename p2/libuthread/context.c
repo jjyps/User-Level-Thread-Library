@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #include "private.h"
 #include "uthread.h"
 
@@ -13,7 +14,7 @@ void uthread_ctx_switch(uthread_ctx_t *prev, uthread_ctx_t *next)
 	 * swapcontext() saves the current context in structure pointer by @prev
 	 * and actives the context pointed by @next
 	 */
-	if (swapcontext(prev, next)) {
+	if (swapcontext(prev, next)) { 
 		perror("swapcontext");
 		exit(1);
 	}

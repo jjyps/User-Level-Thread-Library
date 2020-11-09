@@ -15,6 +15,11 @@
  */
 #define HZ 100
 
+/* Signal handler = timer interrupt handler, will force the currently running thread to yield */
+void timer_interrupt_handler(int signum){
+	uthread_yield();
+}
+
 void preempt_disable(void)
 {
 	/* TODO Phase 4 */
@@ -28,6 +33,8 @@ void preempt_enable(void)
 void preempt_start(void)
 {
 	/* TODO Phase 4 */
+	struct sigacttion sa;
+	sa.sa_handler = timer_interrupt_handler;
 }
 
 void preempt_stop(void)
