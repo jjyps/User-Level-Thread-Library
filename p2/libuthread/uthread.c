@@ -36,12 +36,12 @@ void uthread_yield(void)
 	tcb* ptr;
 	queue_dequeue(threads,(void**)&ptr);
 	queue_enqueue(threads,prev_thread);
-	curr_thread = (struct uthread_tcb*)get_head(threads);
-	uthread_ctx_t* prev_ctx = ptr->thread_context;
-	uthread_ctx_t* next_ctx = curr_thread->thread_context;
-
+	tcb* next_thread = (struct uthread_tcb*)get_head(threads);
+	uthread_ctx_t* prev_ctx = prev_thread->thread_context;
+	uthread_ctx_t* next_ctx = next_thread->thread_context;
 
 	uthread_ctx_switch(prev_ctx, next_ctx);
+	curr_thread = next_thread;
 	
 }
 
