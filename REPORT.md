@@ -15,7 +15,7 @@ In *queue.c*, we used a doubly linked list to implement the queue, where each no
 - *queue_enqueue* and *queue_dequeue* are tested via several functions in the tester. It tests both functions with both large and small number of elements. It does this by checking if *queue_dequeue* removes the right element and if all elements were added or removed using *queue_length*. In addition, it also handles edge cases when the queue is NULL or empty.
 - *queue_delete* is tested with both large and small elements. As well as, edge cases such as a NULL queue or data. In addition, it also tests that the first element is deleted if there are duplicates.
 - *queue_iterate* is tested with two functions *even_to_zero* and *odd_to_zero*. 
-    - *odd_to_zero* changes elements with odd values to zero and deletes elements with even values. The tester, therefore, tests if even elements were successfully deleted and all odd elements were successfully changed to zero.
+    - *odd_to_zero* changes elements with odd values to zero and deletes the 9th element. The tester, therefore, tests if the 9th element was successfully deleted, and all odd elements were successfully changed to zero.
     - *even_to_zero* only changes elements with even values to zero, without deleting any element.
 
 ### Uthread API
@@ -25,11 +25,18 @@ In Semaphore,
 - *struct_semaphore* has *queue_blocked* which is the queue of the waiting threads which are in blocked states and not eligible for the scheduling and *count*, an internal counter, to keep track of numbers of available resources.
 - *sem_create* initiates and allocates new memory for the new semaphore with *count* and return the pointer.
 - *sem_destroy* checkes whether there are threads still being blocked or the memory is NULL; otherwise, deallocate the semaphore.
+ *sem_up* releases the resource from the semaphore which increase the number of available reosource, *count++*. If the waiting list of threads is not empty, then the first, oldest, thread gets unblocked by using Utherad API, *uthread_unblock(first thread)*.
+- *sem_down* takes the resource from the semaphore which decrease the number of available reosource, *count--*. If there is no available resource, the requesting thread will get blocked using Uthread API, *uthread_block()*.
+
+### Preemption
+- *preempt_start* uses a sigaction struct. It assignes timer_interrupt_handler function to the struct's handler. Which yields to the next thread if an interruption occurs and it sets up an alarm such that the frequency of the preemption is 100 HZ. 
+- *preempt_stops* returns the default action of the signal. It does this by setting the flag to *SA_RESETHAND*.
+- *preempt_disable*/*preempt_enable* block/unblock the signal *SIGVTALRM* by creating a sigset and adding *SIGVTALRM* to the set. It uses the function *sigprocmask* & SIG_BLOCK/SIG_UNBLOCK to block/unblock the alarm signal.
+=======
 - *sem_up* releases the resource from the semaphore which increase the number of available reosource, *count++*. If the waiting list of theads is not empty, then the first, oldest, thread gets unblocked by using Utherad API, *uthread_unblock(first thread)*.
 - *sem_down* takes the resource from the semaphore which decrease the number of available reosource, *count--*. If there is no avaialbe resource, the requesting thread will get blocked using Uthread API, *uthread_block()*.
 
 ### Preemption
-
 ### Preemption Tester
 
 ### Challenges/Limitations Faced
