@@ -263,8 +263,7 @@ static void odd_to_zero(void *data) {
     int*a = (int*)data;
     if(*a % 2)
         *a = 0;
-    
-    if(*a == 10)
+    else
         queue_delete(qItr, data);   
 }
 void test_queue_iterate_delete(void) {
@@ -279,7 +278,7 @@ void test_queue_iterate_delete(void) {
     }
 
     queue_iterate(qItr,odd_to_zero);
-    TEST_ASSERT(queue_length(qItr) == 9);
+    TEST_ASSERT(queue_length(qItr) == length_of_data/2);
     TEST_ASSERT(data[0] == 0 && data[2] == 0 && data[4] == 0 && data[6] == 0 && data[8] == 0);
 }
 int main(void)
