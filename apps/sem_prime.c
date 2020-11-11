@@ -15,7 +15,6 @@
 
 #include <sem.h>
 #include <uthread.h>
-#include "uthread.h"
 
 
 #define MAXPRIME 1000

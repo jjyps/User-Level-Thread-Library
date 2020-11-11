@@ -110,7 +110,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	return 0;
 }
 
-/*
+
 void uthread_block(void)
 {
 	curr_thread->curr_state = blocked;
@@ -123,4 +123,3 @@ void uthread_unblock(struct uthread_tcb *uthread)
 	uthread->curr_state = ready;
 	queue_enqueue(threads, uthread);
 }
-*/

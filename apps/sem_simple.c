@@ -11,7 +11,6 @@
 
 #include <sem.h>
 #include <uthread.h>
-#include "uthread.h"
 
 
 sem_t sem1;

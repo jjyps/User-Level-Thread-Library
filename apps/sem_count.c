@@ -12,7 +12,6 @@
 
 #include <sem.h>
 #include <uthread.h>
-#include "uthread.h"
 
 #define MAXCOUNT 20
 

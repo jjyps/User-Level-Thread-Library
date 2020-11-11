@@ -12,7 +12,6 @@
 
 #include <sem.h>
 #include <uthread.h>
-#include "uthread.h"
 
 #define BUFFER_SIZE	16
 #define MAXCOUNT	1000
