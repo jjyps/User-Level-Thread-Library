@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <queue.h>
 
 #define TEST_ASSERT(assert)				\
@@ -22,7 +21,6 @@ void test_create(void)
 
 	TEST_ASSERT(queue_create() != NULL);
 }
-
 /* Enqueue/Dequeue simple */
 void test_queue_simple(void)
 {
@@ -46,7 +44,6 @@ void test_queue_length(void) {
 
     q = queue_create();
     length = queue_length(q);
-
     TEST_ASSERT(length == 0);
     queue_enqueue(q, &data1);
     queue_enqueue(q, &data2);
@@ -64,7 +61,6 @@ void test_queue_destroy_success(void) {
 
     q = queue_create();
     TEST_ASSERT(queue_destroy(q) == 0);
-
 }
 /* Tests queue_destroy with empty queue*/
 void test_queue_destroy_not_empty(void) {
@@ -72,6 +68,7 @@ void test_queue_destroy_not_empty(void) {
     int data = 1;
 
     fprintf(stderr, "\n*** TEST queue_destroy_not_empty ***\n");
+
     q = queue_create();
     queue_enqueue(q, &data);
     TEST_ASSERT(queue_destroy(q) == -1);
@@ -110,6 +107,7 @@ void test_queue_dequeue_empty_queue(void) {
     int *ptr;
 
     fprintf(stderr, "\n*** TEST queue_dequeue_empty_queue ***\n");
+
     q = queue_create();
     TEST_ASSERT(queue_dequeue(q, (void**)&ptr) == -1);
 }
@@ -119,6 +117,7 @@ void test_queue_dequeue_null_queue(void) {
     int *ptr;
 
     fprintf(stderr, "\n*** TEST queue_dequeue_null_queue ***\n");
+
     TEST_ASSERT(queue_dequeue(q, (void**)&ptr) == -1);
 }
 /*Tests that queue_deque removes oldest item*/
@@ -167,6 +166,7 @@ void test_queue_large(void) {
 void test_queue_delete_data_doesnt_exist(void) {
     queue_t q;
     int data1 = 1, data2 = 2;
+
     fprintf(stderr, "\n*** TEST queue_delete_data_doesnt_exist***\n");
 
     q = queue_create();
@@ -177,6 +177,7 @@ void test_queue_delete_data_doesnt_exist(void) {
 void test_queue_delete_null_data(void) {
     queue_t q;
     int data1 = 1, * data2 = NULL;
+
     fprintf(stderr, "\n*** TEST queue_delete_null_data***\n");
 
     q = queue_create();
@@ -187,6 +188,7 @@ void test_queue_delete_null_data(void) {
 void test_queue_delete_null_queue(void) {
     queue_t q = NULL;
     int data1 = 1;
+
     fprintf(stderr, "\n*** TEST queue_delete_null_queue***\n");
 
     TEST_ASSERT(queue_delete(q,&data1) == -1);
@@ -239,6 +241,7 @@ void test_queue_iterate(void) {
     queue_t q;
     int data [] = {1,2,3,4,5,6,7,8,9,10};
     int length_of_data = sizeof(data) / sizeof(data[0]);
+
     fprintf(stderr, "\n*** TEST queue_iterate***\n");
 
     q = queue_create();
@@ -264,7 +267,7 @@ static void odd_to_zero(void *data) {
     if(*a % 2)
         *a = 0;
     
-    if(*a == 9)
+    if(*a == 10)
         queue_delete(qItr, data);   
 }
 void test_queue_iterate_delete(void) {
@@ -277,7 +280,6 @@ void test_queue_iterate_delete(void) {
     for(int i = 0; i < length_of_data; i++) {
         queue_enqueue(qItr, &data[i]);
     }
-
     queue_iterate(qItr,odd_to_zero);
     TEST_ASSERT(queue_length(qItr) == 9);
     TEST_ASSERT(data[0] == 0 && data[2] == 0 && data[4] == 0 && data[6] == 0 && data[8] == 0);

@@ -22,7 +22,6 @@ struct queue {
 
 queue_t queue_create(void)
 {
-	/* TODO Phase 1 */
 	queue_t new_q = malloc(sizeof(struct queue));
 	if(!new_q)
 		return NULL;
@@ -32,28 +31,13 @@ queue_t queue_create(void)
 	new_q->length = 0;
 	return new_q;
 }
-/* for this function I think he only wants us to deallocate memory of the queue itself, not the elements bc he says if queue is not empty then -1*/
 int queue_destroy(queue_t queue) 
 {
 	/* TODO Phase 1 */
-	if(queue == NULL || queue_length(queue) != 0) // Not sure what it meant by return -1 if @queue is not empty?
+	if(queue == NULL || queue_length(queue) != 0)
 		return -1;
 	free(queue);
-	// free(queue->head->value);
-	// while (queue_length(queue) != -1){
-	// 	free(queue->head->value);
-	// 	node_t *temp;
-	// 	temp = queue->head;
-	// 	queue->head = queue->head->next;
 
-	// 	if(queue->head)
-	// 		queue->head->prev = NULL;
-	// 	else
-	// 		queue->tail = NULL;
-	// 	queue->length--;
-	// 	free(temp);
-	// }
-	
 	return 0;
 }
 
@@ -67,14 +51,14 @@ int queue_enqueue(queue_t queue, void *data)
 	if(!new_node)
 		return -1;
 
-	// empty queue
+	/* empty queue */
 	new_node->value = data;
 	if(queue_length(queue) == 0){
 		queue->head = queue->tail = new_node;
 		new_node->next = NULL;
 		new_node->prev = NULL;
 	}
-	// existing queue
+	/* existing queue */
 	else{
 		queue->tail->next = new_node;
 		queue->tail = new_node;
@@ -102,7 +86,7 @@ int queue_dequeue(queue_t queue, void **data)
 	
 	if(queue->head != NULL)
 		queue->head->prev = NULL;
-	//  no more node left in  queue
+	/* no more nodes left in  queue */
 	else
 		queue->tail = NULL;
 
@@ -110,9 +94,7 @@ int queue_dequeue(queue_t queue, void **data)
 	free(temp);
 	return 0;
 }
-
-// Not quite sure with this one
-int queue_delete(queue_t queue, void *data) //Seg faults on queue_iterate_delete -> fixed by removing else on line 129
+int queue_delete(queue_t queue, void *data) 
 {
 	/* TODO Phase 1 */
 	if(queue == NULL || data  == NULL)
@@ -146,7 +128,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
 	if(queue == NULL || func == 0)
 		return -1;
 
-	// from tail to head, if no more head done
+	/* iterates from tail to head, if no more head done */
 	while(queue->head != NULL){
 		func(queue->head->value);
 		//queue->head = NULL;
