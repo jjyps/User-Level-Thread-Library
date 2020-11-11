@@ -1,8 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <queue.h>
+#include "queue.h"
 
 #define TEST_ASSERT(assert)				\
 do {									\
