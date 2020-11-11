@@ -4,6 +4,7 @@
         "array": "c",
         "string_view": "c",
         "vector": "c",
-        "git.enabled": "false"
+        "git.enabled": "false",
+        "__threading_support": "c"
     }
 }

@@ -264,7 +264,7 @@ static void odd_to_zero(void *data) {
     if(*a % 2)
         *a = 0;
     
-    if(*a == 9)
+    if(*a == 10)
         queue_delete(qItr, data);   
 }
 void test_queue_iterate_delete(void) {

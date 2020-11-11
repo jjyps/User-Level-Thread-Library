@@ -1,12 +1,14 @@
 # User Level Thread Library Report
 
 ### Make sure each line has a max of 80 chars
+
 ### Queue Implementation
 In *queue.c*, we used a doubly linked list to implement the queue, where each node has a pointer to the next and previous node. We felt like a doubly linked list would be more sufficient and flexible than an array.
 - *queue_create* allocates memory for the queue and initializes the head and tail of the list. *queue_destroys* on the other hand, deallocates the queue's memory.
 - *queue_enqueue* creates a new node and adds it at the end of the list by linking it with the tail node through *prev* and *next* variables.
 - *queue_delete* iterates through the list until it finds a match. When it does it links the previous node and next node and then deallocates the memory created by the corresponding node.
 - *queue_iterate* iterates through the array and execute the given function with each element in the queue.
+
 ### Queue Tester
 *queue_tester* file contains 19 testcases in order to detect any error in the *queue* implementation. We created testcases for each aspect of every function in the *queue* API.
 - *queue_destroy* function is tested when it’s supposed to succeed, when queue is not empty, and when queue is NULL.
@@ -17,9 +19,14 @@ In *queue.c*, we used a doubly linked list to implement the queue, where each no
     - *even_to_zero* only changes elements with even values to zero, without deleting any element.
 
 ### Uthread API
+Implementation of user level thread library which manages the scheduling of threads' context executions. In *uthread_start* which initially starts the multithreading library along with *uthread_yield*, the current thread is an *idle* thread, behavior of initial access point of the process. 
+- *uthread_create* first allocates the new memory and properties to the *new_thread* of ready state and then enqueues into the queue, *threads*.
+- *uthread_yield* switches between the current thread which will become the previous thread and be enqueued into the *threads* and the next thread which will need to be dequeued from *threads* and become the current thread. We make sure the *prev_thread* is no longer in running state but in ready state and the *next_thread* to become the running thread; And then, we switch two threads using *uthread_ctx_switch*.
+- *uthread_start* initialize the queue, *threads*, which is a container of the multi threads and create an idle thread with *uthread_ctx_t*. Set created idle thread as current thread and change the state to running state and we make sure the idle thread not to be returnned until all of the rest threads finishes.
+- *uthread_exit* makes the state of current thread to *terminated* and then yield to the next thread.
 
 ### Semaphore API
-In Semaphore, 
+In order to control the access to the common  resourcess  by multiple threads, we need semaphore to keep track of numbers of available resources.
 - *struct_semaphore* has *queue_blocked* which is the queue of the waiting threads which are in blocked states and not eligible for the scheduling and *count*, an internal counter, to keep track of numbers of available resources.
 - *sem_create* initiates and allocates new memory for the new semaphore with *count* and return the pointer.
 - *sem_destroy* checks whether there are threads still being blocked or the memory is NULL; otherwise, deallocate the semaphore.
@@ -37,9 +44,15 @@ For preemption tester, there are 2 function testers. One for *preempt_enable* & 
 - *test_preempt_disable_and_enable* tests whether the signal was succesfully blocked/unblocked. It does this by creating 2 threads then calling *preempt_disable* which is supposed to block any *SIGVTALRM* signals. It then raises the signal, *raise* return value should not be equal to zero. It tests *preempt_enable* on the other hand by checking if *raise* return value is zero.
 
 ### Challenges/Limitations Faced
-One of the challenges we faced is with implementing user-level thread library API. It was difficult to try to imagine how threads would be run since it is a relatively new concept to us. In addition, integrating the functions given to us in our API implementation without being able to see some of the functions' implementation. Another challenged we faced is having to figure out a bug that was occurring in a function used by *uthread_ctx_switch*.
+One of the challenges we faced is with implementing user-level thread library API. It was difficult to try to imagine how threads would be run since it is a relatively new concept to us. In addition, integrating the functions given to us in our API implementation without being able to see some of the functions' implementation. 
+
+Another challenge we faced is having to figure out a bug that was occurring in a function used by *uthread_ctx_switch*. We have been kept getting *Segfault* from *uthread_ctx_switch* which turns out to be we forgot to check the state of the threads and also, we were not properly considering the *idle thread* which is the first, main thread that is used as an entry point to the process and must not be returned untill all the rest threads finishes. 
+
+
   
 ### References
+1. http://www.it.uu.se/education/course/homepage/os/vt18/module-4/simple-threads/ - for better understanding of preemptive scheduling 
+
 
 ###### By *Gharam Alsaedi* & *Seunghyup Alex Oh*
 

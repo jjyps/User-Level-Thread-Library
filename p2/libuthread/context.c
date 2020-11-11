@@ -75,4 +75,3 @@ int uthread_ctx_init(uthread_ctx_t *uctx, void *top_of_stack,
 
 	return 0;
 }
-

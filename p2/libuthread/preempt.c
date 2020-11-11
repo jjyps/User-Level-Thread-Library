@@ -16,14 +16,9 @@
 #define HZ 100
 static struct sigaction sa;
 /* Signal handler = timer interrupt handler, will force the currently running thread to yield */
-void timer_interrupt_handler(int signum){
-	uthread_yield();
-}
-
-/* Signal handler = timer interrupt handler, will force the currently running thread to yield */
-void timer_interrupt_handler(int signum){
-	uthread_yield();
-}
+//void timer_interrupt_handler(int signum){
+//	uthread_yield();
+//}
 
 void preempt_disable(void)
 {
@@ -49,11 +44,11 @@ void preempt_start(void)
 {
 	/* TODO Phase 4 */
 	
-	sa.sa_handler = timer_interrupt_handler;
+	//sa.sa_handler = timer_interrupt_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
 	sigaction(SIGVTALRM, &sa, NULL);
-	alarm(1/HZ);
+	//alarm(1/HZ);
 }
 
 void preempt_stop(void)

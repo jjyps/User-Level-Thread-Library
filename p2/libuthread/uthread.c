@@ -5,25 +5,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include "context.c"
 #include "queue.h"
 #include "queue_helpers.h"
-#include "private.h"
 #include "uthread.h"
-#include "context.c"
-typedef struct uthread_tcb tcb;
-enum State {running = 0,ready = 1,blocked = 2,zombie = 3,terminated = 4};
-queue_t threads;
-//queue_t running_q;
-//queue_t ready_q;
-//queue_t q;
-tcb *curr_thread;
+#include "private.h"
+typedef struct uthread_tcb tcb;		
+enum State {running = 0, ready = 1, blocked = 2, zombie = 3, terminated = 4} ;
+queue_t threads;	
+tcb* curr_thread;
 
-struct uthread_tcb
-{
+struct uthread_tcb {
 	/* TODO Phase 2 */
+	uthread_ctx_t *thread_context;
+	void* new_stack;
 	int curr_state;
-	uthread_ctx_t* thread_context;
-	void* top_of_stack;
+	
 };
 
 struct uthread_tcb *uthread_current(void)
@@ -35,90 +32,95 @@ struct uthread_tcb *uthread_current(void)
 void uthread_yield(void)
 {
 	/* TODO Phase 2 */
-	
-	tcb* prev_thread = NULL;
-	tcb* next_thread = NULL;
+	/* Current thread which will be previous thread & next thread, oldest thread in queue */
+	tcb *prev_thread = uthread_current();
+	tcb *next_thread = NULL;
 
-	queue_dequeue(threads,(void**)&next_thread);
-	next_thread->curr_state = 0;
-
-	prev_thread = uthread_current();
-	prev_thread->curr_state = 1;
-	queue_enqueue(threads,prev_thread);
+	prev_thread->curr_state = ready;
+	queue_dequeue(threads, (void**) &next_thread);
+	next_thread->curr_state = running;
 	curr_thread = next_thread;
 
-	//curr_thread = (struct uthread_tcb*)get_head(threads);
-	//uthread_ctx_t* prev_ctx = next_thread->thread_context;
-	//uthread_ctx_t* next_ctx = curr_thread->thread_context;
-	
+	// Prevent idle thread to be enqueued
+	//if(prev_thread != idle)
+	queue_enqueue(threads, prev_thread);
+
 	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
 }
 
 void uthread_exit(void)
 {
 	/* TODO Phase 2 */
-	curr_thread->curr_state = 3;
+	curr_thread->curr_state = terminated;
+	/* Terminate the current state and yield to the next thread */
+	uthread_yield();
 }
 
-int uthread_create(uthread_func_t func, void *arg) 
+int uthread_create(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
 	tcb* new_thread = malloc(sizeof(tcb));
-
-	new_thread->curr_state = 1;
-	void* new_stack = uthread_ctx_alloc_stack();
-	if(new_stack == NULL)
+	if (!new_thread)
 		return -1;
 	
+	new_thread->new_stack = uthread_ctx_alloc_stack();
+	if(new_thread->new_stack == NULL)
+		return -1;
+
 	new_thread->thread_context = malloc(sizeof(uthread_ctx_t));
-	if(uthread_ctx_init(new_thread->thread_context, new_stack, func, arg) == -1)
+	if (new_thread->thread_context == NULL)
+		return -1;
+	
+	if (uthread_ctx_init(new_thread->thread_context, new_thread->new_stack, func, arg) == -1)
 		return -1;
 
+	new_thread->curr_state = ready;
+	queue_enqueue(threads, new_thread);
 
-	new_thread->curr_state = 0;
-	queue_enqueue(threads, &new_thread);
-	if(queue_length(threads) == 1) {
-		curr_thread = (struct uthread_tcb*)get_head(threads);
-	}
-	uthread_ctx_bootstrap(func, arg);
-	
 	return 0;
 }
+
 
 int uthread_start(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
 	threads = queue_create();
-	if(uthread_create(func, arg) == -1) 
+	if (!threads)
 		return -1;
-	
 
-	while(1) {
+	// Multithreading scheudling starts - Set current thread as idle thread
+	tcb* idle = malloc(sizeof(tcb));
+	if (!idle)
+		return -1;
 
-		if(curr_thread->curr_state == 3) {
-			uthread_ctx_destroy_stack(curr_thread->top_of_stack);
-			tcb zombie_thread;
-			curr_thread->curr_state = 4;
-			queue_dequeue(threads, (void**)&zombie_thread);
-		}
-		if(queue_length(threads) == 0) 
-			break;
+	idle->thread_context = malloc(sizeof(uthread_ctx_t));
+	if (idle->thread_context == NULL) 
+		return -1;
 
+	curr_thread = idle;
+	curr_thread->curr_state = running;
 
-	}
-	queue_destroy(threads);
+	if(uthread_create(func, arg) == -1)
+		return -1;
+
+	/* returns once all the threads have finished running */
+	while(queue_length(threads) != 0) 
+		uthread_yield();
+
 	return 0;
 }
 
+/*
 void uthread_block(void)
 {
-	/* TODO Phase 2/3 */
-	curr_thread->curr_state = 2;
+	curr_thread->curr_state = blocked;
 	uthread_yield();
 }
 
+
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-	/* TODO Phase 2/3 */
-	uthread->curr_state = 1;
+	uthread->curr_state = ready;
+	queue_enqueue(threads, uthread);
 }
+*/
