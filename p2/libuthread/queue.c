@@ -129,6 +129,7 @@ int queue_delete(queue_t queue, void *data) //Seg faults on queue_iterate_delete
 			// 	temp->next->prev = NULL; // temp->tail
 				
 			queue->length--;
+			temp = NULL;
 			free(temp);
 			return 0;
 		}

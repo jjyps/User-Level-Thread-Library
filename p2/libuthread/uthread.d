@@ -1,2 +1,2 @@
-uthread.o: uthread.c queue.h queue_helpers.h private.h uthread.h \
-  context.c
+uthread.o: uthread.c context.c private.h uthread.h queue.h \
+  queue_helpers.h
