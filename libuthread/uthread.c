@@ -7,7 +7,6 @@
 #include <sys/time.h>
 #include "context.c"
 #include "queue.h"
-#include "queue_helpers.h"
 #include "uthread.h"
 #include "private.h"
 typedef struct uthread_tcb tcb;		
@@ -99,14 +98,15 @@ int uthread_start(uthread_func_t func, void *arg)
 
 	curr_thread = idle;
 	curr_thread->curr_state = running;
-
+	preempt_start();
 	if(uthread_create(func, arg) == -1)
 		return -1;
 
 	/* returns once all the threads have finished running */
 	while(queue_length(threads) != 0) 
 		uthread_yield();
-
+	
+	preempt_stop();
 	return 0;
 }
 
