@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "queue.h"
-#include "queue_helpers.h"
 typedef struct node node_t;
 struct node {
 	void* value;

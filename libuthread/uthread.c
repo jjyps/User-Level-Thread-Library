@@ -9,10 +9,11 @@
 #include "queue.h"
 #include "uthread.h"
 #include "private.h"
+
 typedef struct uthread_tcb tcb;		
 enum State {running = 0, ready = 1, blocked = 2, zombie = 3, terminated = 4} ;
-queue_t threads;	
-tcb* curr_thread;
+static queue_t threads;	
+static tcb* curr_thread;
 
 struct uthread_tcb {
 	/* TODO Phase 2 */
@@ -36,14 +37,16 @@ void uthread_yield(void)
 	tcb *next_thread = NULL;
 
 	prev_thread->curr_state = ready;
+	preempt_disable();
 	queue_dequeue(threads, (void**) &next_thread);
 	next_thread->curr_state = running;
 	curr_thread = next_thread;
+	
 
 	// Prevent idle thread to be enqueued
 	//if(prev_thread != idle)
 	queue_enqueue(threads, prev_thread);
-
+	preempt_enable();	
 	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
 }
 
@@ -74,7 +77,9 @@ int uthread_create(uthread_func_t func, void *arg)
 		return -1;
 
 	new_thread->curr_state = ready;
+	preempt_disable();
 	queue_enqueue(threads, new_thread);
+	preempt_enable();
 
 	return 0;
 }
@@ -83,7 +88,9 @@ int uthread_create(uthread_func_t func, void *arg)
 int uthread_start(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
+	preempt_disable();
 	threads = queue_create();
+	preempt_enable();
 	if (!threads)
 		return -1;
 
@@ -121,5 +128,7 @@ void uthread_block(void)
 void uthread_unblock(struct uthread_tcb *uthread)
 {
 	uthread->curr_state = ready;
+	preempt_disable();
 	queue_enqueue(threads, uthread);
+	preempt_enable();
 }
