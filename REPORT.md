@@ -34,19 +34,18 @@ In order to control the access to the common  resourcess  by multiple threads, w
 - *sem_down* takes the resource from the semaphore which decrease the number of available resource, *count--*. If there is no available resource, the requesting thread will get blocked using Uthread API, *uthread_block()*.
 
 ### Preemption
-- *preempt_start* uses a sigaction struct. It assignes timer_interrupt_handler function to the struct's handler. Which yields to the next thread if an interruption occurs and it sets up an alarm such that the frequency of the preemption is 100 HZ. 
+- *preempt_start* uses a sigaction struct. It assignes alarm_handler function to the struct's handler. Which yields to the next thread if an interruption occurs and it sets up an alarm using *settimer* such that the frequency of the preemption is 100 HZ. 
 - *preempt_stops* returns the default action of the signal. It does this by setting the flag to *SA_RESETHAND*.
 - *preempt_disable*/*preempt_enable* block/unblock the signal *SIGVTALRM* by creating a sigset and adding *SIGVTALRM* to the set. It uses the function *sigprocmask* & SIG_BLOCK/SIG_UNBLOCK to block/unblock the alarm signal.
 
 ### Preemption Tester
-For preemption tester, there are 2 function testers. One for *preempt_enable* & *preempt_disable* and the other one is for *preempt_start* and *preempt_stop*. There are only 2 testers for these two functions because they work hand in hand. 
-- *test_preempt_start_and_stop* tests whether the alarm started or not. First it creates 2 threads both with infinite loops to make sure that the threads dont return before testing is finished. It then saves the current thread in a temporary value using *uthread_current*. It then starts the preemption and after recieving a signal checks whether it yielded to the next thread. *preempt_stop* on the other hand is tested by doing the opposite, by yielding first and then checking whether the current thread is the first thread.
-- *test_preempt_disable_and_enable* tests whether the signal was succesfully blocked/unblocked. It does this by creating 2 threads then calling *preempt_disable* which is supposed to block any *SIGVTALRM* signals. It then raises the signal, *raise* return value should not be equal to zero. It tests *preempt_enable* on the other hand by checking if *raise* return value is zero.
+To test the preemption. We created two threads *thread1* and *thread2*. *thread2* has an infinite while loop and will therefore take the CPU forever, unless preemption is enabled. In the tester, we test if after *thread1* yeilds to *thread2* does it come back to *thread1* and prints "Im back" and exits. If it does then *preempt.c* passed succesfully, if not then it failed the test.
 
 ### Challenges/Limitations Faced
 One of the challenges we faced is with implementing user-level thread library API. It was difficult to try to imagine how threads would be run since it is a relatively new concept to us. In addition, integrating the functions given to us in our API implementation without being able to see some of the functions' implementation. 
 
 Another challenge we faced is having to figure out a bug that was occurring in a function used by *uthread_ctx_switch*. We have been kept getting *Segfault* from *uthread_ctx_switch* which turns out to be we forgot to check the state of the threads and also, we were not properly considering the *idle thread* which is the first, main thread that is used as an entry point to the process and must not be returned untill all the rest threads finishes. 
+
 
 
   
