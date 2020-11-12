@@ -7,14 +7,12 @@
 #include "uthread.h"
 
 struct semaphore {
-	/* TODO Phase 3 */
 	queue_t blocked;
 	size_t count;
 };
 
 sem_t sem_create(size_t count)
 {
-	/* TODO Phase 3 */
 	sem_t sem = malloc(sizeof(sem_t));
 	if(!sem)
 		return NULL;
@@ -26,7 +24,6 @@ sem_t sem_create(size_t count)
 
 int sem_destroy(sem_t sem)
 {
-	/* TODO Phase 3 */
 	if (sem == NULL || queue_destroy(sem->blocked) == -1)
 		return -1;
 	
@@ -37,11 +34,9 @@ int sem_destroy(sem_t sem)
 
 int sem_down(sem_t sem)
 {
-	/* TODO Phase 3 */
 	if(sem == NULL)
 		return -1;
-
-
+		
 	/* No available resource cause the calling thread blocked */
 	if(sem->count == 0){
 		struct uthread_tcb *caller;
@@ -56,7 +51,6 @@ int sem_down(sem_t sem)
 
 int sem_up(sem_t sem)
 {
-	/* TODO Phase 3 */
 	if(sem == NULL)
 		return -1;
 

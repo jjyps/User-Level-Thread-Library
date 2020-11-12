@@ -16,7 +16,6 @@ static queue_t threads;
 static tcb* curr_thread;
 
 struct uthread_tcb {
-	/* TODO Phase 2 */
 	uthread_ctx_t *thread_context;
 	void* new_stack;
 	int curr_state;
@@ -25,13 +24,11 @@ struct uthread_tcb {
 
 struct uthread_tcb *uthread_current(void)
 {
-	/* TODO Phase 2 */
 	return curr_thread;
 }
 
 void uthread_yield(void)
 {
-	/* TODO Phase 2 */
 	/* Current thread which will be previous thread & next thread, oldest thread in queue */
 	tcb *prev_thread = uthread_current();
 	tcb *next_thread = NULL;
@@ -52,7 +49,6 @@ void uthread_yield(void)
 
 void uthread_exit(void)
 {
-	/* TODO Phase 2 */
 	curr_thread->curr_state = terminated;
 	/* Terminate the current state and yield to the next thread */
 	uthread_yield();
@@ -60,7 +56,6 @@ void uthread_exit(void)
 
 int uthread_create(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
 	tcb* new_thread = malloc(sizeof(tcb));
 	if (!new_thread)
 		return -1;
@@ -87,7 +82,6 @@ int uthread_create(uthread_func_t func, void *arg)
 
 int uthread_start(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
 	preempt_disable();
 	threads = queue_create();
 	preempt_enable();
