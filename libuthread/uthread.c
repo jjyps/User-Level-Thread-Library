@@ -7,16 +7,15 @@
 #include <sys/time.h>
 #include "context.c"
 #include "queue.h"
-#include "queue_helpers.h"
 #include "uthread.h"
 #include "private.h"
+
 typedef struct uthread_tcb tcb;		
 enum State {running = 0, ready = 1, blocked = 2, zombie = 3, terminated = 4} ;
-queue_t threads;	
-tcb* curr_thread;
+static queue_t threads;	
+static tcb* curr_thread;
 
 struct uthread_tcb {
-	/* TODO Phase 2 */
 	uthread_ctx_t *thread_context;
 	void* new_stack;
 	int curr_state;
@@ -25,40 +24,43 @@ struct uthread_tcb {
 
 struct uthread_tcb *uthread_current(void)
 {
-	/* TODO Phase 2 */
 	return curr_thread;
 }
 
 void uthread_yield(void)
 {
-	/* TODO Phase 2 */
 	/* Current thread which will be previous thread & next thread, oldest thread in queue */
 	tcb *prev_thread = uthread_current();
 	tcb *next_thread = NULL;
 
 	prev_thread->curr_state = ready;
+	preempt_disable();
 	queue_dequeue(threads, (void**) &next_thread);
 	next_thread->curr_state = running;
 	curr_thread = next_thread;
+	
 
 	// Prevent idle thread to be enqueued
 	//if(prev_thread != idle)
 	queue_enqueue(threads, prev_thread);
-
+	preempt_enable();	
 	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
+
 }
 
 void uthread_exit(void)
 {
-	/* TODO Phase 2 */
 	curr_thread->curr_state = terminated;
+	tcb* terminated_thread = uthread_current();
 	/* Terminate the current state and yield to the next thread */
 	uthread_yield();
+	free(terminated_thread->thread_context);
+	uthread_ctx_destroy_stack(terminated_thread->new_stack);
+	free(terminated_thread);
 }
 
 int uthread_create(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
 	tcb* new_thread = malloc(sizeof(tcb));
 	if (!new_thread)
 		return -1;
@@ -75,16 +77,18 @@ int uthread_create(uthread_func_t func, void *arg)
 		return -1;
 
 	new_thread->curr_state = ready;
+	preempt_disable();
 	queue_enqueue(threads, new_thread);
-
+	preempt_enable();
+	
 	return 0;
 }
 
-
 int uthread_start(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
+	preempt_disable();
 	threads = queue_create();
+	preempt_enable();
 	if (!threads)
 		return -1;
 
@@ -99,28 +103,32 @@ int uthread_start(uthread_func_t func, void *arg)
 
 	curr_thread = idle;
 	curr_thread->curr_state = running;
-
+	preempt_start();
 	if(uthread_create(func, arg) == -1)
 		return -1;
 
 	/* returns once all the threads have finished running */
-	while(queue_length(threads) != 0) 
+	while(queue_length(threads) != 0)
 		uthread_yield();
-
+	
+	preempt_stop();
+	free(idle->thread_context);
+	uthread_ctx_destroy_stack(idle->new_stack);
+	free(idle);
+	
 	return 0;
 }
 
-/*
 void uthread_block(void)
 {
 	curr_thread->curr_state = blocked;
 	uthread_yield();
 }
 
-
 void uthread_unblock(struct uthread_tcb *uthread)
 {
 	uthread->curr_state = ready;
+	preempt_disable();
 	queue_enqueue(threads, uthread);
+	preempt_enable();
 }
-*/
