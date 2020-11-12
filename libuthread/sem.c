@@ -16,7 +16,7 @@ sem_t sem_create(size_t count)
 	sem_t sem = malloc(sizeof(sem_t));
 	if(!sem)
 		return NULL;
-	// preempt_enable();
+	preempt_enable();
 	sem->count = count;
 	sem->blocked = queue_create();
 	return sem;
@@ -27,7 +27,7 @@ int sem_destroy(sem_t sem)
 	if (sem == NULL || queue_destroy(sem->blocked) == -1)
 		return -1;
 	
-	// preempt_enable();
+	preempt_enable();
 	free(sem);
 	return 0;
 }
