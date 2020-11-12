@@ -14,7 +14,7 @@ typedef struct uthread_tcb tcb;
 enum State {running = 0, ready = 1, blocked = 2, zombie = 3, terminated = 4} ;
 static queue_t threads;	
 static tcb* curr_thread;
-
+tcb* idle;
 struct uthread_tcb {
 	uthread_ctx_t *thread_context;
 	void* new_stack;
@@ -41,11 +41,17 @@ void uthread_yield(void)
 	
 
 	// Prevent idle thread to be enqueued
-	//if(prev_thread != idle)
+	// if(prev_thread != idle)
+	if(next_thread == idle && queue_length(threads) > 1) {
+		next_thread->curr_state = ready;
+		queue_dequeue(threads, (void**) &next_thread);
+		next_thread->curr_state = running;
+		curr_thread = next_thread;
+		queue_enqueue(threads,next_thread);
+	}
 	queue_enqueue(threads, prev_thread);
 	preempt_enable();	
 	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
-
 }
 
 void uthread_exit(void)
@@ -57,6 +63,10 @@ void uthread_exit(void)
 	free(terminated_thread->thread_context);
 	uthread_ctx_destroy_stack(terminated_thread->new_stack);
 	free(terminated_thread);
+	queue_dequeue(threads, (void**)&terminated_thread);
+	if(queue_length(threads) == 0) {
+		queue_enqueue(threads,idle);
+	}
 }
 
 int uthread_create(uthread_func_t func, void *arg)
@@ -93,7 +103,7 @@ int uthread_start(uthread_func_t func, void *arg)
 		return -1;
 
 	// Multithreading scheudling starts - Set current thread as idle thread
-	tcb* idle = malloc(sizeof(tcb));
+	idle = malloc(sizeof(tcb));
 	if (!idle)
 		return -1;
 
@@ -108,8 +118,10 @@ int uthread_start(uthread_func_t func, void *arg)
 		return -1;
 
 	/* returns once all the threads have finished running */
-	while(queue_length(threads) != 0)
+
+	while(queue_length(threads) != 0) {
 		uthread_yield();
+	}
 	
 	preempt_stop();
 	free(idle->thread_context);
@@ -123,6 +135,7 @@ void uthread_block(void)
 {
 	curr_thread->curr_state = blocked;
 	uthread_yield();
+	
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
