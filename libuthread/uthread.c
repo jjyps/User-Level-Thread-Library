@@ -45,13 +45,18 @@ void uthread_yield(void)
 	queue_enqueue(threads, prev_thread);
 	preempt_enable();	
 	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
+
 }
 
 void uthread_exit(void)
 {
 	curr_thread->curr_state = terminated;
+	tcb* terminated_thread = uthread_current();
 	/* Terminate the current state and yield to the next thread */
 	uthread_yield();
+	free(terminated_thread->thread_context);
+	uthread_ctx_destroy_stack(terminated_thread->new_stack);
+	free(terminated_thread);
 }
 
 int uthread_create(uthread_func_t func, void *arg)
@@ -75,10 +80,9 @@ int uthread_create(uthread_func_t func, void *arg)
 	preempt_disable();
 	queue_enqueue(threads, new_thread);
 	preempt_enable();
-
+	
 	return 0;
 }
-
 
 int uthread_start(uthread_func_t func, void *arg)
 {
@@ -104,20 +108,22 @@ int uthread_start(uthread_func_t func, void *arg)
 		return -1;
 
 	/* returns once all the threads have finished running */
-	while(queue_length(threads) != 0) 
+	while(queue_length(threads) != 0)
 		uthread_yield();
 	
 	preempt_stop();
+	free(idle->thread_context);
+	uthread_ctx_destroy_stack(idle->new_stack);
+	free(idle);
+	
 	return 0;
 }
-
 
 void uthread_block(void)
 {
 	curr_thread->curr_state = blocked;
 	uthread_yield();
 }
-
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {

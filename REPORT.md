@@ -48,8 +48,8 @@ multithreading library along with *uthread_yield*, the current thread is an
 previous thread and be enqueued into the *threads* and the next thread which 
 will need to be dequeued from *threads* and become the current thread. We make 
 sure the *prev_thread* is no longer in running state but in ready state and the
-*next_thread* to become the running thread; And then, we switch two threads
-using *uthread_ctx_switch*.
+*next_thread* to become the running thread; And then, we switch two threads' 
+context using *uthread_ctx_switch*.
 - *uthread_start* initialize the queue, *threads*, which is a container of the 
 multi threads and create an idle thread with *uthread_ctx_t*. Set created idle 
 thread as current thread and change the state to running state and we make sure
