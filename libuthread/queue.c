@@ -116,7 +116,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
 	if(queue == NULL || func == 0)
 		return -1;
 
-	// from tail to head, if no more head done
+	// from tail to head, if there is no more head, then done
 	while(queue->head != NULL){
 		func(queue->head->value);
 		queue->head = queue->head->next;
@@ -132,9 +132,11 @@ int queue_length(queue_t queue)
 	else
 		return (queue->length);
 }
+
 void* get_head(queue_t queue) {
 	return queue->head;
 }
+
 void* get_next(queue_t queue) {
 	return queue->head->next;
 }

@@ -40,8 +40,7 @@ void uthread_yield(void)
 	curr_thread = next_thread;
 	
 
-	// Prevent idle thread to be enqueued
-	// if(prev_thread != idle)
+	/* Prevent the idle thread to be enqueued */
 	if(next_thread == idle && queue_length(threads) > 1) {
 		next_thread->curr_state = ready;
 		queue_dequeue(threads, (void**) &next_thread);
@@ -49,6 +48,7 @@ void uthread_yield(void)
 		curr_thread = next_thread;
 		queue_enqueue(threads,next_thread);
 	}
+
 	queue_enqueue(threads, prev_thread);
 	preempt_enable();	
 	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
@@ -58,14 +58,17 @@ void uthread_exit(void)
 {
 	curr_thread->curr_state = terminated;
 	tcb* terminated_thread = uthread_current();
+
 	/* Terminate the current state and yield to the next thread */
 	uthread_yield();
 	free(terminated_thread->thread_context);
 	uthread_ctx_destroy_stack(terminated_thread->new_stack);
 	free(terminated_thread);
 	queue_dequeue(threads, (void**)&terminated_thread);
+
+	/* Finally enqueue the idel thread back into the queue */
 	if(queue_length(threads) == 0) {
-		queue_enqueue(threads,idle);
+		queue_enqueue(threads, idle);
 	}
 }
 
@@ -102,7 +105,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	if (!threads)
 		return -1;
 
-	// Multithreading scheudling starts - Set current thread as idle thread
+	/* Multithreading scheudling starts - Set current thread as idle thread */
 	idle = malloc(sizeof(tcb));
 	if (!idle)
 		return -1;
@@ -117,8 +120,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	if(uthread_create(func, arg) == -1)
 		return -1;
 
-	/* returns once all the threads have finished running */
-
+	/* Until there is no more threads left in the queue, keep running */
 	while(queue_length(threads) != 0) {
 		uthread_yield();
 	}

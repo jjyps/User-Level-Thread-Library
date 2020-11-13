@@ -28,11 +28,11 @@ all elements were added or removed using *queue_length*. In addition, it also
 handles edge cases when the queue is NULL or empty.
 - *queue_delete* is tested with both large and small elements. As well as, edge
 cases such as a NULL queue or data. In addition, it also tests that the first 
-element is deleted if there are duplicates.
+ element is deleted if there are duplicates.
 - *queue_iterate* is tested with two functions *even_to_zero* and *odd_to_zero* 
     - *odd_to_zero* changes elements with odd values to zero and deletes 
 elements with even values. The tester, therefore, tests if half the elements in 
-the queue were successfully deleted. and that all odd elements were 
+ the queue were successfully deleted. and that all odd elements were 
 successfully changed to zero.
     - *even_to_zero* only changes elements with even values to zero, without 
 deleting any element. The tester tests if this is successful.
@@ -41,21 +41,29 @@ deleting any element. The tester tests if this is successful.
 Implementation of user level thread library which manages the scheduling of 
 threads' context executions. In *uthread_start* which initially starts the 
 multithreading library along with *uthread_yield*, the current thread is an 
-*idle* thread, behavior of initial access point of the process. 
+*idle* thread, behavior of initial access point of the process. The library b
+egins with enumerated state to represent each thread's state, *struct uthread_
+tcb* which have its own stack, execution context, and *int curr_state* to indi
+cate its state, the queue, container, of the threads, and the current thread.
 - *uthread_create* first allocates the new memory and properties to the 
 *new_thread* of ready state and then enqueues into the queue, *threads*.
 - *uthread_yield* switches between the current thread which will become the 
 previous thread and be enqueued into the *threads* and the next thread which 
 will need to be dequeued from *threads* and become the current thread. We make 
 sure the *prev_thread* is no longer in running state but in ready state and the
-*next_thread* to become the running thread; And then, we switch two threads' 
-context using *uthread_ctx_switch*.
+ *next_thread* to become the running thread; And then, we switch two threads' 
+context using *uthread_ctx_switch*. Prevention of the idle thread to be enque
+ued is implemented by the condition statement of whether the next thread is *
+idle* and there are more than one threads left in the queue. 
 - *uthread_start* initialize the queue, *threads*, which is a container of the 
-multi threads and create an idle thread with *uthread_ctx_t*. Set created idle 
-thread as current thread and change the state to running state and we make sure
-the idle thread not to be returnned until all of the rest threads finishes.
+multi threads and allocate the memory for an idle thread with *uthread_ctx_t*.
+Set current thread as initial idle thread and change the state to running stat
+e and we make sure all the threads finish the execution until there is no more 
+threads left in the queue.
 - *uthread_exit* makes the state of current thread to *terminated* and then 
-yield to the next thread.
+yield to the next thread. We free the allocated memory of terminated thread, i
+ts exectuion context and stack. Once all the threads are finished, add the sav
+ed idle thread back to the queue and run for the last.
 
 ### Semaphore API
 In order to control the access to the common resources by multiple threads, we 
@@ -108,6 +116,8 @@ a function used by *uthread_ctx_switch*. We kept getting *Segfault* from
 threads and also, we were not properly considering the *idle thread* which is
 the first, main thread that is used as an entry point to the process and must
 not be returned untill all the other threads finish. 
+
+The last challenge we faced is running the *sem_simple.c* tester. We are expected to have "Thread3 Thread2 Thread1". However, we were having "Thread3 Thread1 Thread2" as an output. That shows that the first main thread which is supposed to not be returnning until the rest of threads are finished running and returned is returnned before Thread2. We checked *uthread_unblock* was called from the thread of which state is not *blocked* and figured we had not implemented the prevention for *idle thread* to be enqueued back to the queue in *uthread_yield*. By globally creating *tcb idle*, making sure it not get accessed untill the rest of threads execution are finished and prior terminated threads to be terminated, we could pass the tester and memory leak as well.
 
 ### References
 1. www.it.uu.se/education/course/homepage/os/vt18/module-4/simple-threads/ -
