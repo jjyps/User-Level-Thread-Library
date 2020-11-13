@@ -117,14 +117,14 @@ threads and also, we were not properly considering the *idle thread* which is
 the first, main thread that is used as an entry point to the process and must
 not be returned untill all the other threads finish. 
 
-The last challenge we faced is running the *sem_simple.c* tester. We are expected
-to have "Thread3 Thread2 Thread1". However, we were having "Thread3 Thread1 
+The last challenge we faced is running the *sem_simple.c* tester. We are expec
+ted to have "Thread3 Thread2 Thread1". However, we were having "Thread3 Thread1 
 Thread2" as an output. That shows that the first main thread which is supposed
 to not be returnning until the rest of threads are finished running and returned
 is returnned before Thread2. We checked *uthread_unblock* was called from the 
 thread of which state is not *blocked* and figured we had not implemented the 
-prevention for *idle thread* to be enqueued back to the queue in *uthread_yield*.
-By globally creating *tcb idle*, making sure it not get accessed untill the 
+prevention for *idle thread* to be enqueued back to the queue in *uthread_yield*
+. By globally creating *tcb idle*, making sure it not get accessed untill the 
 rest of threads execution are finished and prior terminated threads to be 
 terminated, we could pass the tester and memory leak as well.
 
