@@ -20,7 +20,6 @@ sem_t sem_create(size_t count)
 	sem->blocked = queue_create();
 	return sem;
 }
-
 int sem_destroy(sem_t sem)
 {
 	if (sem == NULL || queue_destroy(sem->blocked) == -1)
@@ -30,7 +29,6 @@ int sem_destroy(sem_t sem)
 	free(sem);
 	return 0;
 }
-
 int sem_down(sem_t sem)
 {
 	if(sem == NULL)
@@ -47,7 +45,6 @@ int sem_down(sem_t sem)
 	sem->count--;
 	return 0;
 }
-
 int sem_up(sem_t sem)
 {
 	if(sem == NULL)

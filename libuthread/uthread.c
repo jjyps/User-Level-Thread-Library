@@ -10,18 +10,17 @@
 #include "uthread.h"
 #include "private.h"
 
-typedef struct uthread_tcb tcb;		
-enum State {running = 0, ready = 1, blocked = 2, zombie = 3, terminated = 4} ;
+typedef struct uthread_tcb tcb;	
+enum State {running = 0, ready = 1, blocked = 2, terminated = 4};
 static queue_t threads;	
-static tcb* curr_thread;
-tcb* idle;
+static tcb* curr_thread; 
+static tcb* idle;
+
 struct uthread_tcb {
 	uthread_ctx_t *thread_context;
 	void* new_stack;
 	int curr_state;
-	
 };
-
 struct uthread_tcb *uthread_current(void)
 {
 	return curr_thread;
@@ -38,9 +37,8 @@ void uthread_yield(void)
 	queue_dequeue(threads, (void**) &next_thread);
 	next_thread->curr_state = running;
 	curr_thread = next_thread;
-	
 
-	/* Prevent the idle thread to be enqueued */
+	/*idle thread shouldn't exit unless all threads are finished*/	
 	if(next_thread == idle && queue_length(threads) > 1) {
 		next_thread->curr_state = ready;
 		queue_dequeue(threads, (void**) &next_thread);
@@ -50,28 +48,22 @@ void uthread_yield(void)
 	}
 
 	queue_enqueue(threads, prev_thread);
-	preempt_enable();	
 	uthread_ctx_switch(prev_thread->thread_context, next_thread->thread_context);
+	preempt_enable();
 }
-
 void uthread_exit(void)
 {
+	/* Terminate the current thread and yield to the next one */
 	curr_thread->curr_state = terminated;
 	tcb* terminated_thread = uthread_current();
 
-	/* Terminate the current state and yield to the next thread */
 	uthread_yield();
+	queue_delete(threads,terminated_thread);
 	free(terminated_thread->thread_context);
 	uthread_ctx_destroy_stack(terminated_thread->new_stack);
 	free(terminated_thread);
-	queue_dequeue(threads, (void**)&terminated_thread);
-
-	/* Finally enqueue the idel thread back into the queue */
-	if(queue_length(threads) == 0) {
-		queue_enqueue(threads, idle);
-	}
+	
 }
-
 int uthread_create(uthread_func_t func, void *arg)
 {
 	tcb* new_thread = malloc(sizeof(tcb));
@@ -96,7 +88,6 @@ int uthread_create(uthread_func_t func, void *arg)
 	
 	return 0;
 }
-
 int uthread_start(uthread_func_t func, void *arg)
 {
 	preempt_disable();
@@ -120,7 +111,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	if(uthread_create(func, arg) == -1)
 		return -1;
 
-	/* Until there is no more threads left in the queue, keep running */
+	/* returns once all the threads have finished running */
 	while(queue_length(threads) != 0) {
 		uthread_yield();
 	}
@@ -132,14 +123,11 @@ int uthread_start(uthread_func_t func, void *arg)
 	
 	return 0;
 }
-
 void uthread_block(void)
 {
 	curr_thread->curr_state = blocked;
 	uthread_yield();
-	
 }
-
 void uthread_unblock(struct uthread_tcb *uthread)
 {
 	uthread->curr_state = ready;

@@ -34,7 +34,6 @@ int queue_destroy(queue_t queue)
 	free(queue);
 	return 0;
 }
-
 int queue_enqueue(queue_t queue, void *data)
 {
 	if(queue == NULL || data  == NULL)
@@ -44,14 +43,14 @@ int queue_enqueue(queue_t queue, void *data)
 	if(!new_node)
 		return -1;
 
-	// empty queue
+	/* empty queue */
 	new_node->value = data;
 	if(queue_length(queue) == 0){
 		queue->head = queue->tail = new_node;
 		new_node->next = NULL;
 		new_node->prev = NULL;
 	}
-	// existing queue
+	/* existing queue */
 	else{
 		queue->tail->next = new_node;
 		queue->tail = new_node;
@@ -62,7 +61,6 @@ int queue_enqueue(queue_t queue, void *data)
 	queue->length++;
 	return 0;
 }
-
 int queue_dequeue(queue_t queue, void **data)
 {
 	if(queue == NULL || data  == NULL || queue->length == 0)
@@ -84,7 +82,6 @@ int queue_dequeue(queue_t queue, void **data)
 	free(temp);
 	return 0;
 }
-
 int queue_delete(queue_t queue, void *data)
 {
 	if(queue == NULL || data  == NULL)
@@ -110,13 +107,12 @@ int queue_delete(queue_t queue, void *data)
 
 	return -1;
 }
-
 int queue_iterate(queue_t queue, queue_func_t func) 
 {
 	if(queue == NULL || func == 0)
 		return -1;
 
-	// from tail to head, if there is no more head, then done
+	/* iterate from head to tail until it reaches the end */
 	while(queue->head != NULL){
 		func(queue->head->value);
 		queue->head = queue->head->next;
