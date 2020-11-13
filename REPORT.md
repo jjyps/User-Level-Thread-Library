@@ -61,8 +61,8 @@ Set current thread as initial idle thread and change the state to running stat
 e and we make sure all the threads finish the execution until there is no more 
 threads left in the queue.
 - *uthread_exit* makes the state of current thread to *terminated* and then 
-yield to the next thread. We free the allocated memory of terminated thread, i
-ts exectuion context and stack. Once all the threads are finished, add the sav
+yield to the next thread. We free the allocated memory of terminated thread, 
+its exectuion context and stack. Once all the threads are finished, add the sav
 ed idle thread back to the queue and run for the last.
 
 ### Semaphore API
@@ -117,7 +117,16 @@ threads and also, we were not properly considering the *idle thread* which is
 the first, main thread that is used as an entry point to the process and must
 not be returned untill all the other threads finish. 
 
-The last challenge we faced is running the *sem_simple.c* tester. We are expected to have "Thread3 Thread2 Thread1". However, we were having "Thread3 Thread1 Thread2" as an output. That shows that the first main thread which is supposed to not be returnning until the rest of threads are finished running and returned is returnned before Thread2. We checked *uthread_unblock* was called from the thread of which state is not *blocked* and figured we had not implemented the prevention for *idle thread* to be enqueued back to the queue in *uthread_yield*. By globally creating *tcb idle*, making sure it not get accessed untill the rest of threads execution are finished and prior terminated threads to be terminated, we could pass the tester and memory leak as well.
+The last challenge we faced is running the *sem_simple.c* tester. We are expected
+to have "Thread3 Thread2 Thread1". However, we were having "Thread3 Thread1 
+Thread2" as an output. That shows that the first main thread which is supposed
+to not be returnning until the rest of threads are finished running and returned
+is returnned before Thread2. We checked *uthread_unblock* was called from the 
+thread of which state is not *blocked* and figured we had not implemented the 
+prevention for *idle thread* to be enqueued back to the queue in *uthread_yield*.
+By globally creating *tcb idle*, making sure it not get accessed untill the 
+rest of threads execution are finished and prior terminated threads to be 
+terminated, we could pass the tester and memory leak as well.
 
 ### References
 1. www.it.uu.se/education/course/homepage/os/vt18/module-4/simple-threads/ -
