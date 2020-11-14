@@ -1,6 +1,8 @@
 # User-Level-Thread-Library
 UCD Fall 2020 ECS150(file:///Users/alexoh/Desktop/Alex/UC%20Davis/Fall%202020/ECS150/Projects/User-Level-Thread-Library/project_2.html)
 
+## The goal of this project is to understand the idea of threads, by implementing a basic user-level thread library for Linux. The library will provide a complete interface for applications to create and run independent threads concurrently.
+
 
 ### Queue Implementation
 In *queue.c*, we used a doubly linked list to implement the queue, where each 
